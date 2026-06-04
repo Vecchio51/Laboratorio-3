@@ -41,12 +41,27 @@ main()
         exit(EXIT_FAILURE);
     }
 // 2. Crear los pipes para comunicación con los hijos
-
+    pipe(pipe_credito);
+    //pipe(pipe_debito);
 
 
 // 3. Crear el primer hijo: CRÉDITO
 
+    pid_credito = fork();
 
+    if(pid_credito == 0)
+    {
+        printf("Soy el hijo credito.\n");
+        exit(0);
+    }
+
+    pid_debito = fork();
+
+    if(pid_debito == 0)
+    {
+        printf("Soy el hijo debito.\n");
+        exit(0);
+    }
 
 // ----------------------------------------------------
 // CÓDIGO DEL PADRE
@@ -60,7 +75,7 @@ main()
 
     printf("Padre leyendo las transacciones...\n\n");
    
-    }
+    
 
 /* * en esta parte hay quye crear un Bucle de lectura usando select() o lectura no bloqueante de los pipes.
 * Para cumplir la consigna de forma directa, leemos de a un pipe
@@ -70,5 +85,4 @@ main()
 // Leer del pipe de Crédito hasta que cierre
 
 
-    return 0;
-}
+    return 0;}
