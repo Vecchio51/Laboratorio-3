@@ -51,7 +51,10 @@ main()
 
     if(pid_credito == 0)
     {
-        printf("Soy el hijo credito.\n");
+        close(pipe_credito[0]);
+        close(pipe_debito[0]);
+        close(pipe_debito[1]);
+        credito("credito.txt", pipe_credito, compartido);
         exit(0);
     }
 
@@ -59,20 +62,44 @@ main()
 
     if(pid_debito == 0)
     {
-        printf("Soy el hijo debito.\n");
+        close(pipe_debito[0]);
+        close(pipe_credito[0]);
+        close(pipe_credito[1]);
+        debito("debito.txt", pipe_debito, compartido);
         exit(0);
     }
 // ----------------------------------------------------
 // CÓDIGO DEL PADRE
 // ----------------------------------------------------
 // El padre solo lee, así que cierra las escrituras de ambos pipes
+
+    printf("Padre leyendo las transacciones...\n\n");
+
     close(pipe_credito[1]);
     close(pipe_debito[1]);
 
     float monto_recibido;
+    ssize_t bytes;
     int fin_credito = 0, fin_debito = 0;
+    while (!fin_credito || !fin_debito){
+        if(!fin_credito){
+            bytes = read(pipe_credito[0], &monto_recibido, sizeof(float));
+            if (bytes == 0)
+                fin_credito = 1;
+            else 
+                printf("Credito: +%.2f\n", monto_recibido);
+        }
+        if (!fin_debito){
+            bytes = read(pipe_debito[0], &monto_recibido, sizeof(float));
+            if(bytes == 0)
+                fin_debito = 1;
+            else   
+                printf("Debito: -%.2f\n", monto_recibido);
+        }
+    }
+    wait(NULL);  //Coloco dos wait(NULL) ya que tenemos dos hijos, entonces necesito llamarlo dos veces (uno por hijo)
+    wait(NULL);
 
-    printf("Padre leyendo las transacciones...\n\n");
    
     
 
