@@ -42,7 +42,7 @@ main()
     }
 // 2. Crear los pipes para comunicación con los hijos
     pipe(pipe_credito);
-    //pipe(pipe_debito);
+    pipe(pipe_debito);
 
 
 // 3. Crear el primer hijo: CRÉDITO
@@ -100,6 +100,10 @@ main()
     wait(NULL);  //Coloco dos wait(NULL) ya que tenemos dos hijos, entonces necesito llamarlo dos veces (uno por hijo)
     wait(NULL);
 
+    printf("\nSaldo final: %.2f\n", compartido->saldo);
+
+    munmap(compartido, sizeof(RecursoCompartido));
+
    
     
 
@@ -123,7 +127,7 @@ void credito (char *archivo_montos, int p[], RecursoCompartido *compartido){
 
     float monto;
 
-    while (fcanf(f, "%f", &monto) == 1){
+    while (fscanf(f, "%f", &monto) == 1){
         sem_wait(&(compartido->semaforo));  //si otro proceso esta dentro, aca me bloqueo hasta que salga
 
         compartido->saldo += monto;         //solo un proceso a la vez llega aca
