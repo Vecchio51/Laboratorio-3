@@ -62,7 +62,6 @@ main()
         printf("Soy el hijo debito.\n");
         exit(0);
     }
-
 // ----------------------------------------------------
 // CÓDIGO DEL PADRE
 // ----------------------------------------------------
@@ -86,4 +85,48 @@ main()
 
 
     return 0;
+}
+
+void credito (char *archivo_montos, int p[], RecursoCompartido *compartido){
+    FILE *f = fopen(archivo_montos, "r");
+    if (f == NULL){
+        perror("Error abriendo archivo credito");
+        exit(EXIT_FAILURE);
+    }
+
+    float monto;
+
+    while (fcanf(f, "%f", &monto) == 1){
+        sem_wait(&(compartido->semaforo));  //si otro proceso esta dentro, aca me bloqueo hasta que salga
+
+        compartido->saldo += monto;         //solo un proceso a la vez llega aca
+
+        sem_post(&(compartido->semaforo));  //liberar el semaforo 
+
+        write(p[1], &monto, sizeof(float)); //enviar el monto al padre por el pipe
+    }
+    fclose(f);
+    close(p[1]);                            //esto hace que el padre reciba 0 bytes -> sabe que este hijo termino
+}
+
+void debito (char *archivo_montos, int p[], RecursoCompartido *compartido){
+    FILE *f = fopen(archivo_montos, "r");
+    if (f == NULL){
+        perror("Error abriendo archivo debito");
+        exit(EXIT_FAILURE);
+    }
+    float monto;
+
+    while (fscanf(f, "%f", &monto) == 1){
+        sem_wait(&(compartido->semaforo));
+
+        compartido->saldo -= monto;
+
+        sem_post(&(compartido->semaforo));
+
+        write(p[1], &monto, sizeof(float));
+    }
+    fclose(f);
+    close(p[1]);
+    
 }
