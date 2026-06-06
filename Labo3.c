@@ -106,12 +106,7 @@ main()
 
    
     
-
-/* * en esta parte hay quye crear un Bucle de lectura usando select() o lectura no bloqueante de los pipes.
-* Para cumplir la consigna de forma directa, leemos de a un pipe
-* hasta que se vacíen (read devuelve 0 cuando el hijo cierra su extremo).
-*/
-    
+ 
 // Leer del pipe de Crédito hasta que cierre
 
 
