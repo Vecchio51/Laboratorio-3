@@ -1,3 +1,6 @@
+// URL del repositorio de Github: https://github.com/[TU-USUARIO]/[TU-REPOSITORIO]
+// Autores: [TU NOMBRE], [NOMBRE COMPAÑERO 1], [NOMBRE COMPAÑERO 2]
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,9 +21,8 @@ typedef struct {
 void credito(char *archivo_montos, int p[], RecursoCompartido *compartido);
 void debito(char *archivo_montos, int p[], RecursoCompartido *compartido);
 
-
-
-main()
+// CORRECCIÓN: Firma correcta del main usando 'int main()'
+int main()
 {
     RecursoCompartido *compartido;
     int pipe_credito[2];
@@ -44,9 +46,7 @@ main()
     pipe(pipe_credito);
     pipe(pipe_debito);
 
-
 // 3. Crear el primer hijo: CRÉDITO
-
     pid_credito = fork();
 
     if(pid_credito == 0)
@@ -97,18 +97,14 @@ main()
                 printf("Debito: -%.2f\n", monto_recibido);
         }
     }
-    wait(NULL);  //Coloco dos wait(NULL) ya que tenemos dos hijos, entonces necesito llamarlo dos veces (uno por hijo)
+    wait(NULL);  // Coloco dos wait(NULL) ya que tenemos dos hijos
     wait(NULL);
 
     printf("\nSaldo final: %.2f\n", compartido->saldo);
 
+    // CORRECCIÓN: Destruir el semáforo antes de liberar la memoria
+    sem_destroy(&(compartido->semaforo));
     munmap(compartido, sizeof(RecursoCompartido));
-
-   
-    
- 
-// Leer del pipe de Crédito hasta que cierre
-
 
     return 0;
 }
@@ -123,16 +119,16 @@ void credito (char *archivo_montos, int p[], RecursoCompartido *compartido){
     float monto;
 
     while (fscanf(f, "%f", &monto) == 1){
-        sem_wait(&(compartido->semaforo));  //si otro proceso esta dentro, aca me bloqueo hasta que salga
+        sem_wait(&(compartido->semaforo));  // si otro proceso esta dentro, aca me bloqueo hasta que salga
 
-        compartido->saldo += monto;         //solo un proceso a la vez llega aca
+        compartido->saldo += monto;         // solo un proceso a la vez llega aca
 
-        sem_post(&(compartido->semaforo));  //liberar el semaforo 
+        sem_post(&(compartido->semaforo));  // liberar el semaforo 
 
-        write(p[1], &monto, sizeof(float)); //enviar el monto al padre por el pipe
+        write(p[1], &monto, sizeof(float)); // enviar el monto al padre por el pipe
     }
     fclose(f);
-    close(p[1]);                            //esto hace que el padre reciba 0 bytes -> sabe que este hijo termino
+    close(p[1]);                            // esto hace que el padre reciba 0 bytes -> sabe que este hijo termino
 }
 
 void debito (char *archivo_montos, int p[], RecursoCompartido *compartido){
@@ -154,5 +150,4 @@ void debito (char *archivo_montos, int p[], RecursoCompartido *compartido){
     }
     fclose(f);
     close(p[1]);
-    
 }
