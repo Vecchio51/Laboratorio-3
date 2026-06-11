@@ -1,5 +1,5 @@
-// URL del repositorio de Github: https://github.com/[TU-USUARIO]/[TU-REPOSITORIO]
-// Autores: [TU NOMBRE], [NOMBRE COMPAÑERO 1], [NOMBRE COMPAÑERO 2]
+// URL del repositorio de Github: https://github.com/Vecchio51/Laboratorio-3.git
+// Autores: Francisco Vecchione, Walter Ariel Paz Estrada
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +21,6 @@ typedef struct {
 void credito(char *archivo_montos, int p[], RecursoCompartido *compartido);
 void debito(char *archivo_montos, int p[], RecursoCompartido *compartido);
 
-// CORRECCIÓN: Firma correcta del main usando 'int main()'
 int main()
 {
     RecursoCompartido *compartido;
@@ -131,6 +130,8 @@ void credito (char *archivo_montos, int p[], RecursoCompartido *compartido){
     close(p[1]);                            // esto hace que el padre reciba 0 bytes -> sabe que este hijo termino
 }
 
+// Función ejecutada por el proceso hijo "Débito"
+// Recibe el nombre del archivo, los descriptores del pipe y el puntero a la memoria compartida
 void debito (char *archivo_montos, int p[], RecursoCompartido *compartido){
     FILE *f = fopen(archivo_montos, "r");
     if (f == NULL){
@@ -140,14 +141,17 @@ void debito (char *archivo_montos, int p[], RecursoCompartido *compartido){
     float monto;
 
     while (fscanf(f, "%f", &monto) == 1){
+        // --- INICIO DE LA SECCIÓN CRÍTICA ---
+        // Operación DOWN (P). Si el semáforo está en 1, lo pasa a 0 y avanza.
+        // Si está en 0 (porque el proceso Crédito lo está usando), se queda bloqueado esperando.
         sem_wait(&(compartido->semaforo));
 
-        compartido->saldo -= monto;
+        compartido->saldo -= monto; // solo un proceso a la vez llega aca
 
-        sem_post(&(compartido->semaforo));
+        sem_post(&(compartido->semaforo)); // liberar el semaforo
 
-        write(p[1], &monto, sizeof(float));
+        write(p[1], &monto, sizeof(float)); // enviar el monto al padre por el pipe
     }
-    fclose(f);
-    close(p[1]);
+    fclose(f); // cerrar el archivo
+    close(p[1]); // cerrar el pipe para que el padre sepa que este hijo terminó (recibirá 0 bytes)
 }
